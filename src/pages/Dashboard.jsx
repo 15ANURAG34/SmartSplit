@@ -1,21 +1,31 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { db } from '../firebaseConfig';
+import { collection, addDoc, getDocs } from 'firebase/firestore';
 import '../styles/dashboard.css';
 
 const TOGETHER_API_KEY = process.env.REACT_APP_TOGETHER_API_KEY;
 
-
 function Dashboard() {
-  const [entries, setEntries] = useState([]);
-  const [advice, setAdvice] = useState('');
   const [expenses, setExpenses] = useState([]);
-  const [loadingAdvice, setLoadingAdvice] = useState(false);
-  const [gptAdvice, setGptAdvice] = useState('');
-  const adviceRef = useRef(null);
   const [totalBudget, setTotalBudget] = useState(0);
   const [initialBudgetInput, setInitialBudgetInput] = useState('');
   const [showBudgetPopup, setShowBudgetPopup] = useState(true);
+  const [loadingAdvice, setLoadingAdvice] = useState(false);
+  const [gptAdvice, setGptAdvice] = useState('');
+  const adviceRef = useRef(null);
 
-  const handleFormSubmit = (e) => {
+  // Fetch all saved expenses from Firestore on first load
+  useEffect(() => {
+    const fetchExpenses = async () => {
+      const snapshot = await getDocs(collection(db, 'expenses'));
+      const data = snapshot.docs.map((doc) => doc.data());
+      setExpenses(data);
+    };
+    fetchExpenses();
+  }, []);
+
+  // Add new expense to Firestore + local state
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
     const form = e.target;
     const newEntry = {
@@ -26,20 +36,22 @@ function Dashboard() {
       status: form.status.value,
     };
 
-    setExpenses((prev) => [...prev, newEntry]);
+    try {
+      await addDoc(collection(db, 'expenses'), newEntry);
+      setExpenses((prev) => [...prev, newEntry]);
+    } catch (err) {
+      console.error('Error saving to Firestore:', err);
+    }
+
     form.reset();
   };
 
   const totalExpenses = expenses.reduce(
-    (sum, entry) => sum + (entry.type.toLowerCase() === 'expenses' ? entry.amount : 0),
-    0
+    (sum, e) => sum + (e.type.toLowerCase() === 'expenses' ? e.amount : 0), 0
   );
-
   const totalIncome = expenses.reduce(
-    (sum, entry) => sum + (entry.type.toLowerCase() === 'income' ? entry.amount : 0),
-    0
+    (sum, e) => sum + (e.type.toLowerCase() === 'income' ? e.amount : 0), 0
   );
-
   const budgetLeft = totalBudget + totalIncome - totalExpenses;
 
   const avgExpense = expenses.filter(e => e.type.toLowerCase() === 'expenses').length > 0
@@ -69,7 +81,6 @@ function Dashboard() {
   const getSpendingAdvice = async () => {
     try {
       setLoadingAdvice(true);
-
       const expenseList = expenses.map((e) =>
         `- ${e.date}: ${e.description} (${e.type}) - $${e.amount}`
       ).join("\n");
@@ -118,7 +129,6 @@ Give me 2-3 personalized tips on budgeting, saving, or avoiding overspending bas
 
   return (
     <div className="main--content">
-      {/* Budget Popup */}
       {showBudgetPopup && (
         <div className="popup-overlay">
           <div className="popup-box">
@@ -136,15 +146,14 @@ Give me 2-3 personalized tips on budgeting, saving, or avoiding overspending bas
         </div>
       )}
 
-      {/* Header */}
       <div className="header--wrapper">
         <div className="header--title">
-          <span>SmartSplit</span>
-          <h2>Dashboard</h2>
+          
+          <h2>SmartSplit</h2>
+          <span>Dashboard</span>
         </div>
       </div>
 
-      {/* Cards */}
       <div className="card--container">
         <div className="title--row">
           <h3 className="main--title">          Today's data</h3>
@@ -188,7 +197,6 @@ Give me 2-3 personalized tips on budgeting, saving, or avoiding overspending bas
         </div>
       </div>
 
-      {/* Expense Input Form */}
       <form className="finance--form" onSubmit={handleFormSubmit}>
         <input type="date" name="date" required />
         <select name="type" required>
@@ -204,7 +212,6 @@ Give me 2-3 personalized tips on budgeting, saving, or avoiding overspending bas
         <button type="submit">Add Entry</button>
       </form>
 
-      {/* Get Spending Advice Button */}
       <div style={{ textAlign: 'center', marginBottom: '20px' }}>
         <button
           style={{
@@ -223,7 +230,6 @@ Give me 2-3 personalized tips on budgeting, saving, or avoiding overspending bas
         </button>
       </div>
 
-      {/* Advice Display */}
       {gptAdvice && (
         <div
           ref={adviceRef}
@@ -245,7 +251,6 @@ Give me 2-3 personalized tips on budgeting, saving, or avoiding overspending bas
         </div>
       )}
 
-      {/* Finance Table */}
       <div className="tabular--wrapper">
         <h3 className="main--title">Finance data</h3>
         <div className="table--container">
