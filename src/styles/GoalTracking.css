@@ -1,0 +1,25 @@
+/* CSS Page to style goal tracking */
+.button {
+    width: 400px;
+    margin-right: 10px;
+  }
+  
+  .add-button {
+    padding: 5px 10px;
+  }
+  
+  .progress-bar-container {
+    width: 100%;
+    height: 20px;
+    background-color: #ee0707;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  
+  .progress-bar-fill {
+    height: 100%;
+    background-color: #4caf50;
+    width: 0%;
+    transition: width 0.3s ease-in-out;
+    border-radius: 10px;
+  }
