@@ -1,6 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { db } from '../firebaseConfig';
-import { collection, addDoc, getDocs } from 'firebase/firestore';
 import '../styles/dashboard.css';
 
 const TOGETHER_API_KEY = process.env.REACT_APP_TOGETHER_API_KEY;
@@ -14,18 +12,7 @@ function Dashboard() {
   const [gptAdvice, setGptAdvice] = useState('');
   const adviceRef = useRef(null);
 
-  // Fetch all saved expenses from Firestore on first load
-  useEffect(() => {
-    const fetchExpenses = async () => {
-      const snapshot = await getDocs(collection(db, 'expenses'));
-      const data = snapshot.docs.map((doc) => doc.data());
-      setExpenses(data);
-    };
-    fetchExpenses();
-  }, []);
-
-  // Add new expense to Firestore + local state
-  const handleFormSubmit = async (e) => {
+  const handleFormSubmit = (e) => {
     e.preventDefault();
     const form = e.target;
     const newEntry = {
@@ -35,14 +22,7 @@ function Dashboard() {
       amount: parseFloat(form.amount.value),
       status: form.status.value,
     };
-
-    try {
-      await addDoc(collection(db, 'expenses'), newEntry);
-      setExpenses((prev) => [...prev, newEntry]);
-    } catch (err) {
-      console.error('Error saving to Firestore:', err);
-    }
-
+    setExpenses((prev) => [...prev, newEntry]);
     form.reset();
   };
 
@@ -90,7 +70,7 @@ You are a helpful financial coach. Here's a list of my recent expenses:
 
 ${expenseList}
 
-Give me 2-3 personalized tips on budgeting, saving, or avoiding overspending based on this data. Make it casual and encouraging. Include one emoji.
+Give me 2-3 personalized tips on budgeting, saving, or avoiding overspending based on this data. Make them encouraging Do not include any emojis at all.
 `;
 
       const res = await fetch("https://api.together.xyz/v1/chat/completions", {
@@ -148,7 +128,6 @@ Give me 2-3 personalized tips on budgeting, saving, or avoiding overspending bas
 
       <div className="header--wrapper">
         <div className="header--title">
-          
           <h2>SmartSplit</h2>
           <span>Dashboard</span>
         </div>
@@ -156,7 +135,7 @@ Give me 2-3 personalized tips on budgeting, saving, or avoiding overspending bas
 
       <div className="card--container">
         <div className="title--row">
-          <h3 className="main--title">          Today's data</h3>
+          <h3 className="main--title">Today's data</h3>
           <button className="update-budget-btn" onClick={updateBudget}>
             Change Budget
           </button>
