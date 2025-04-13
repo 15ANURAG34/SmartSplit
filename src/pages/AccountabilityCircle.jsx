@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 
+const TOGETHER_API_KEY = process.env.REACT_APP_TOGETHER_API_KEY;
+
 export default function AccountabilityCircle() {
   const [nameInput, setNameInput] = useState("");
   const [circleData, setCircleData] = useState([]);
@@ -25,7 +27,6 @@ export default function AccountabilityCircle() {
     setCircleData(circleData.filter((_, idx) => idx !== i));
   };
 
-  // ✨ Updated generateSummary with correct POST body and loading spinner
   const generateSummary = async () => {
     setLoading(true);
 
@@ -36,19 +37,48 @@ export default function AccountabilityCircle() {
       )
       .join("\n");
 
+    const prompt = `
+You are a friendly budgeting coach helping a college student manage a group of friends' spending habits. Here's their data:
+
+${stats}
+
+Write a light, encouraging summary:
+- Mention each friend by name
+- Congratulate those below 80%
+- Gently warn those over 100%
+- Use a warm tone, one emoji, and no formal bullet points
+`;
+
     try {
-      const response = await fetch("http://localhost:3001/accountability", {
+      const response = await fetch("https://api.together.xyz/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${TOGETHER_API_KEY}`,
         },
-        body: JSON.stringify({ friendStats: stats }), // ✅ Correct JSON
+        body: JSON.stringify({
+          model: "mistralai/Mixtral-8x7B-Instruct-v0.1",
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are a fun, casual, friendly financial assistant that writes weekly accountability summaries.",
+            },
+            {
+              role: "user",
+              content: prompt,
+            },
+          ],
+          temperature: 0.8,
+          max_tokens: 300,
+        }),
       });
 
       const data = await response.json();
-      setSummary(data.message.trim());
+      const reply = data.choices?.[0]?.message?.content || "⚠️ No summary generated.";
+      setSummary(reply.trim());
     } catch (error) {
-      console.error("Backend error:", error);
+      console.error("Together.ai error:", error);
       setSummary("⚠️ Error generating summary. Please try again.");
     } finally {
       setLoading(false);
@@ -177,7 +207,6 @@ export default function AccountabilityCircle() {
         })}
       </div>
 
-      {/* ✨ Button + Loading Spinner */}
       <button
         onClick={generateSummary}
         disabled={loading}
@@ -195,7 +224,6 @@ export default function AccountabilityCircle() {
         {loading ? "Generating Summary..." : "Get Weekly Summary"}
       </button>
 
-      {/* ✨ Loading Spinner or Summary Display */}
       {loading && (
         <div style={{
           marginTop: "1rem",
