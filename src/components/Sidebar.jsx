@@ -1,8 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import '../styles/Sidebar.css';  // optional if you want to keep sidebar styles separate
+import '../styles/Sidebar.css';
 
-function Sidebar() {
+function Sidebar() 
+{
   return (
     <div className="sidebar">
       <div className="logo"></div>
