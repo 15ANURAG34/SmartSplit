@@ -1,25 +1,59 @@
-/* CSS Page to style goal tracking */
-.button {
-    width: 400px;
-    margin-right: 10px;
-  }
-  
-  .add-button {
-    padding: 5px 10px;
-  }
-  
-  .progress-bar-container {
-    width: 100%;
-    height: 20px;
-    background-color: #ee0707;
-    border-radius: 10px;
-    overflow: hidden;
-  }
-  
-  .progress-bar-fill {
-    height: 100%;
-    background-color: #4caf50;
-    width: 0%;
-    transition: width 0.3s ease-in-out;
-    border-radius: 10px;
-  }
+/* GoalTracker.css */
+
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap");
+
+.accountability-container {
+  padding: 2rem;
+  background: #e5e5e5;
+  min-height: 100vh;
+  font-family: 'Poppins', sans-serif;
+}
+
+.accountability-title {
+  font-size: 2rem;
+  font-weight: 600;
+  text-align: center;
+  color: rgba(113, 99, 186, 1);
+  margin-bottom: 2rem;
+}
+
+/* --- THIS is the 2x2 grid that will actually work --- */
+.goal-grid {
+  display: grid;
+  grid-template-columns: 2fr 2fr; /* Two equal columns */
+  grid-template-rows: 1fr 1fr;    /* Two rows */
+  gap: 2rem;
+  height: calc(100vh - 6rem);     /* Fill screen below header */
+}
+
+.card--container {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Fill grid cell */
+}
+
+
+/* Titles */
+.main--title {
+  color: rgba(113, 99, 186, 1);
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+
+.goal-progress-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.goal-progress-item {
+  width: calc(25% - 1.5rem); /* 4 per row with spacing */
+  min-width: 150px;
+}

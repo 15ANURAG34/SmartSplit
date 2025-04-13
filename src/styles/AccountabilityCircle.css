@@ -1,0 +1,130 @@
+.accountability-container {
+    padding: 2rem;
+    background: #e5e5e5;
+    min-height: 100vh;
+    font-family: 'Poppins', sans-serif;
+  }
+  
+  .accountability-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    color: rgba(113, 99, 186, 1);
+  }
+  
+  .input-group {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .friend-input {
+    flex: 1;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+  }
+  
+  .add-friend-btn {
+    background: rgba(113, 99, 186, 1);
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  
+  .friend-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .friend-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 1rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  .friend-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+  
+  .friend-name {
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .friend-meta {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  
+  .delete-btn {
+    background: #ef4444;
+    color: #fff;
+    border: none;
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .progress-bar {
+    height: 8px;
+    background-color: #e5e7eb;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+  }
+  
+  .progress-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+  }
+  
+  .friend-summary {
+    font-size: 0.9rem;
+    color: #374151;
+    text-align: right;
+    font-weight: 500;
+  }
+  
+  .summary-btn {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: rgba(113, 99, 186, 1);
+    color: #fff;
+    font-weight: 600;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .loading-text {
+    margin-top: 1rem;
+    font-size: 1.2rem;
+    text-align: center;
+    color: #715FDB;
+  }
+  
+  .summary-box {
+    margin-top: 1.5rem;
+    background: #fff8dc;
+    padding: 1rem;
+    border-radius: 10px;
+    border: 1px solid #facc15;
+    font-size: 0.95rem;
+    white-space: pre-wrap;
+    margin-bottom: 2rem;
+  }
