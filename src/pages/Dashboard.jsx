@@ -3,7 +3,10 @@ import '../styles/dashboard.css';
 
 const TOGETHER_API_KEY = process.env.REACT_APP_TOGETHER_API_KEY;
 
+
 function Dashboard() {
+  const [entries, setEntries] = useState([]);
+  const [advice, setAdvice] = useState('');
   const [expenses, setExpenses] = useState([]);
   const [loadingAdvice, setLoadingAdvice] = useState(false);
   const [gptAdvice, setGptAdvice] = useState('');
