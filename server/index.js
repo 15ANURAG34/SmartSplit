@@ -59,7 +59,7 @@ app.post('/accountability', async (req, res) => {
         messages: [
           {
             role: "system",
-            content: "You are a friendly budgeting assistant writing weekly summaries for college students based on spending data."
+            content: "Using my budget and list of recent expenses Give me 2-3 personalized tips on budgeting, saving, or avoiding overspending based on this data. Make it casual and encouraging. Include one emoji."
           },
           {
             role: "user",
