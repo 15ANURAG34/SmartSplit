@@ -144,7 +144,7 @@ Give me 2-3 personalized tips on budgeting, saving, or avoiding overspending bas
       {/* Cards */}
       <div className="card--container">
         <div className="title--row">
-          <h3 className="main--title">Today's data</h3>
+          <h3 className="main--title">          Today's data</h3>
           <button className="update-budget-btn" onClick={updateBudget}>
             Change Budget
           </button>
