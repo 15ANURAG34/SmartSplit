@@ -19,7 +19,6 @@ import '../styles/GoalTracking.css';
 const GoalTracker = () => {
   const [goals, setGoals] = useState([]);
 
-  // ✅ Fetch goals from Firestore on load
   useEffect(() => {
     const fetchGoals = async () => {
       const goalsCollection = collection(db, 'goals');
@@ -34,14 +33,12 @@ const GoalTracker = () => {
     fetchGoals();
   }, []);
 
-  // ✅ Add new goal to Firestore
   const handleAddGoal = async (goal) => {
     const goalsCollection = collection(db, 'goals');
     const docRef = await addDoc(goalsCollection, goal);
     setGoals((prev) => [...prev, { ...goal, id: docRef.id }]);
   };
 
-  // ✅ Update saved value in Firestore
   const handleUpdateSaved = async (index, newSaved) => {
     const updatedGoals = [...goals];
     const goal = updatedGoals[index];
@@ -56,31 +53,30 @@ const GoalTracker = () => {
   };
 
   return (
-    <div>
-      <h1>🎯 Goal Tracker</h1>
-  
-      <section>
-        <h2>Add New Goal</h2>
+    <div className="accountability-container">
+      <h1 className="accountability-title">🎯 Goal Tracker</h1>
+
+      <section className="card--container">
+        <h2 className="main--title">Add New Goal</h2>
         <GoalForm onAddGoal={handleAddGoal} />
       </section>
-  
-      <section>
-        <h2>Current Goals</h2>
+
+      <section className="card--container">
+        <h2 className="main--title">Current Goals</h2>
         <GoalList goals={goals} />
       </section>
-  
-      <section>
-        <h2>Goal Progress</h2>
+
+      <section className="card--container">
+        <h2 className="main--title">Goal Progress</h2>
         <GoalProgress goals={goals} onUpdateSaved={handleUpdateSaved} />
       </section>
-  
-      <section>
-        <h2>💡 Suggestions</h2>
-        <Suggestions goals={goals} /> 
+
+      <section className="card--container">
+        <h2 className="main--title">💡 Suggestions</h2>
+        <Suggestions goals={goals} />
       </section>
     </div>
   );
-  
 };
 
 export default GoalTracker;
