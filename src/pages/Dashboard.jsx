@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import '../styles/dashboard.css';
 
 const TOGETHER_API_KEY = process.env.REACT_APP_TOGETHER_API_KEY;
@@ -14,6 +14,9 @@ function Dashboard() {
   const [loadingAdvice, setLoadingAdvice] = useState(false);
   const [gptAdvice, setGptAdvice] = useState('');
   const adviceRef = useRef(null);
+  const [totalBudget, setTotalBudget] = useState(0);
+  const [initialBudgetInput, setInitialBudgetInput] = useState('');
+  const [showBudgetPopup, setShowBudgetPopup] = useState(true);
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
@@ -26,14 +29,24 @@ function Dashboard() {
       status: form.status.value,
     };
 
-    setEntries((prev) => [...prev, newEntry]);
-    e.target.reset();
+    setExpenses((prev) => [...prev, newEntry]);
+    form.reset();
   };
 
-  const totalExpenses = entries.reduce((sum, entry) => sum + (entry.type.toLowerCase() === 'expenses' ? entry.amount : 0), 0);
-  const budgetLeft = totalBudget - totalExpenses;
-  const avgExpense = entries.length > 0
-    ? (totalExpenses / entries.length).toFixed(2)
+  const totalExpenses = expenses.reduce(
+    (sum, entry) => sum + (entry.type.toLowerCase() === 'expenses' ? entry.amount : 0),
+    0
+  );
+
+  const totalIncome = expenses.reduce(
+    (sum, entry) => sum + (entry.type.toLowerCase() === 'income' ? entry.amount : 0),
+    0
+  );
+
+  const budgetLeft = totalBudget + totalIncome - totalExpenses;
+
+  const avgExpense = expenses.filter(e => e.type.toLowerCase() === 'expenses').length > 0
+    ? (totalExpenses / expenses.filter(e => e.type.toLowerCase() === 'expenses').length).toFixed(2)
     : 0;
 
   const updateBudget = () => {
@@ -57,14 +70,11 @@ function Dashboard() {
   };
 
   const getSpendingAdvice = async () => {
-    const totalSpent = entries.reduce((sum, entry) => sum + entry.amount, 0);
-    const prompt = `I spent $${totalSpent} this week. Can you give me 3 fun, easy tips to save money next week?`;
-
     try {
       setLoadingAdvice(true);
 
       const expenseList = expenses.map((e) =>
-        `- ${e.date}: ${e.description} (${e.category}) - £${e.amount}`
+        `- ${e.date}: ${e.description} (${e.type}) - $${e.amount}`
       ).join("\n");
 
       const prompt = `
@@ -129,6 +139,15 @@ Give me 2-3 personalized tips on budgeting, saving, or avoiding overspending bas
         </div>
       )}
 
+      {/* Header */}
+      <div className="header--wrapper">
+        <div className="header--title">
+          <span>SmartSplit</span>
+          <h2>Dashboard</h2>
+        </div>
+      </div>
+
+      {/* Cards */}
       <div className="card--container">
         <div className="title--row">
           <h3 className="main--title">Today's data</h3>
@@ -152,7 +171,7 @@ Give me 2-3 personalized tips on budgeting, saving, or avoiding overspending bas
             <div className="card--header">
               <div className="amount">
                 <span className="title">Number Of Entries</span>
-                <span className="amount--value">{entries.length}</span>
+                <span className="amount--value">{expenses.length}</span>
               </div>
               <i className="fas fa-list icon dark--purple"></i>
             </div>
@@ -163,7 +182,7 @@ Give me 2-3 personalized tips on budgeting, saving, or avoiding overspending bas
               <div className="amount">
                 <span className="title">Average Expense Per Entry</span>
                 <span className="amount--value">
-                  {entries.length > 0 ? `$${avgExpense}` : 'N/A'}
+                  {expenses.length > 0 ? `$${avgExpense}` : 'N/A'}
                 </span>
               </div>
               <i className="fa-solid fa-face-surprise icon dark--green icon--large"></i>
@@ -174,11 +193,13 @@ Give me 2-3 personalized tips on budgeting, saving, or avoiding overspending bas
 
       {/* Expense Input Form */}
       <form className="finance--form" onSubmit={handleFormSubmit}>
-      <input type="date" name="date" required />
-        <input type="text" name="type" placeholder="Transaction Type" required />
+        <input type="date" name="date" required />
+        <select name="type" required>
+          <option value="expenses">Expenses</option>
+          <option value="income">Income</option>
+        </select>
         <input type="text" name="description" placeholder="Description" required />
         <input type="number" name="amount" placeholder="Amount" required />
-        <input type="text" name="category" placeholder="Category" required />
         <select name="status" required>
           <option value="Pending">Pending</option>
           <option value="Completed">Completed</option>
@@ -199,54 +220,13 @@ Give me 2-3 personalized tips on budgeting, saving, or avoiding overspending bas
             border: 'none'
           }}
           onClick={getSpendingAdvice}
+          disabled={loadingAdvice}
         >
-          Get Spending Advice
+          {loadingAdvice ? 'Loading Advice...' : 'Get Spending Advice'}
         </button>
       </div>
 
       {/* Advice Display */}
-      {advice && (
-        <div style={{
-          background: '#f9f9f9',
-          padding: '1rem',
-          borderRadius: '10px',
-          marginBottom: '2rem',
-          textAlign: 'center'
-        }}>
-          {advice}
-        </div>
-      )}
-
-      {/* Table */}
-      <div className="tabular--wrapper">
-        <h3 className="main--title">Finance data</h3>
-        <div className="table--container">
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Transaction Type</th>
-                <th>Description</th>
-                <th>Amount</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {entries.map((entry, index) => (
-                <tr key={index}>
-                  <td>{entry.date}</td>
-                  <td>{entry.type}</td>
-                  <td>{entry.description}</td>
-                  <td>${entry.amount.toFixed(2)}</td>
-                  <td>{entry.status}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* GPT Advice */}
       {gptAdvice && (
         <div
           ref={adviceRef}
@@ -267,6 +247,35 @@ Give me 2-3 personalized tips on budgeting, saving, or avoiding overspending bas
           <p>{gptAdvice}</p>
         </div>
       )}
+
+      {/* Finance Table */}
+      <div className="tabular--wrapper">
+        <h3 className="main--title">Finance data</h3>
+        <div className="table--container">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Transaction Type</th>
+                <th>Description</th>
+                <th>Amount</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {expenses.map((entry, index) => (
+                <tr key={index}>
+                  <td>{entry.date}</td>
+                  <td>{entry.type}</td>
+                  <td>{entry.description}</td>
+                  <td>${entry.amount.toFixed(2)}</td>
+                  <td>{entry.status}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }
