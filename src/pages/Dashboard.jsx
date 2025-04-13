@@ -6,9 +6,6 @@ const TOGETHER_API_KEY = process.env.REACT_APP_TOGETHER_API_KEY;
 
 function Dashboard() {
   const [entries, setEntries] = useState([]);
-  const [totalBudget, setTotalBudget] = useState(0);
-  const [initialBudgetInput, setInitialBudgetInput] = useState('');
-  const [showBudgetPopup, setShowBudgetPopup] = useState(true);
   const [advice, setAdvice] = useState('');
   const [expenses, setExpenses] = useState([]);
   const [loadingAdvice, setLoadingAdvice] = useState(false);
