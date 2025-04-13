@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import '../styles/dashboard.css';
 
 const TOGETHER_API_KEY = process.env.REACT_APP_TOGETHER_API_KEY;
@@ -9,29 +9,50 @@ function Dashboard() {
   const [gptAdvice, setGptAdvice] = useState('');
   const adviceRef = useRef(null);
 
-  const handleSubmit = (e) => {
+  const handleFormSubmit = (e) => {
     e.preventDefault();
-
-    const newExpense = {
-      date: e.target.date.value,
-      type: e.target.type.value,
-      description: e.target.description.value,
-      amount: parseFloat(e.target.amount.value),
-      category: e.target.category.value,
-      status: e.target.status.value,
+    const form = e.target;
+    const newEntry = {
+      date: form.date.value,
+      type: form.type.value,
+      description: form.description.value,
+      amount: parseFloat(form.amount.value),
+      status: form.status.value,
     };
 
     setExpenses((prev) => [...prev, newExpense]);
     e.target.reset();
   };
 
-  const totalAmount = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+  const totalExpenses = entries.reduce((sum, entry) => sum + (entry.type.toLowerCase() === 'expenses' ? entry.amount : 0), 0);
+  const budgetLeft = totalBudget - totalExpenses;
+  const avgExpense = entries.length > 0
+    ? (totalExpenses / entries.length).toFixed(2)
+    : 0;
 
-  const handleGetAdvice = async () => {
-    if (expenses.length === 0) {
-      alert("Add some expenses first.");
-      return;
+  const updateBudget = () => {
+    const newBudget = prompt('Enter your new budget:');
+    const parsed = parseFloat(newBudget);
+    if (!isNaN(parsed) && parsed > 0) {
+      setTotalBudget(parsed);
+    } else {
+      alert('Invalid budget amount.');
     }
+  };
+
+  const handleStartTracking = () => {
+    const parsed = parseFloat(initialBudgetInput);
+    if (!isNaN(parsed) && parsed > 0) {
+      setTotalBudget(parsed);
+      setShowBudgetPopup(false);
+    } else {
+      alert('Please enter a valid budget amount.');
+    }
+  };
+
+  const getSpendingAdvice = async () => {
+    const totalSpent = entries.reduce((sum, entry) => sum + entry.amount, 0);
+    const prompt = `I spent $${totalSpent} this week. Can you give me 3 fun, easy tips to save money next week?`;
 
     try {
       setLoadingAdvice(true);
@@ -83,19 +104,63 @@ Give me 2-3 personalized tips on budgeting, saving, or avoiding overspending bas
   }, [gptAdvice]);
 
   return (
-    <div className="dashboard-content">
-      <h1>Welcome to SmartSplit Dashboard</h1>
+    <div className="main--content">
+      {/* Budget Popup */}
+      {showBudgetPopup && (
+        <div className="popup-overlay">
+          <div className="popup-box">
+            <h2>Set Your Budget</h2>
+            <input
+              type="number"
+              value={initialBudgetInput}
+              onChange={(e) => setInitialBudgetInput(e.target.value)}
+              placeholder="Enter total budget"
+            />
+            <button className="start-tracking-btn" onClick={handleStartTracking}>
+              Start Tracking
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="card--container">
-        <h3 className="main--title">Today's Data</h3>
+        <div className="title--row">
+          <h3 className="main--title">Today's data</h3>
+          <button className="update-budget-btn" onClick={updateBudget}>
+            Change Budget
+          </button>
+        </div>
+
         <div className="card--wrapper">
           <div className="payment--card light--red">
             <div className="card--header">
               <div className="amount">
-                <span className="title">Total Expenses</span>
-                <span className="amount--value">£{totalAmount.toFixed(2)}</span>
+                <span className="title">Budget Left Over</span>
+                <span className="amount--value">${budgetLeft.toFixed(2)}</span>
               </div>
-              <i className="fas fa-pound-sign icon"></i>
+              <i className="fa-solid fa-dollar-sign icon dark--red"></i>
+            </div>
+          </div>
+
+          <div className="payment--card light--purple">
+            <div className="card--header">
+              <div className="amount">
+                <span className="title">Number Of Entries</span>
+                <span className="amount--value">{entries.length}</span>
+              </div>
+              <i className="fas fa-list icon dark--purple"></i>
+            </div>
+          </div>
+
+          <div className="payment--card light--green">
+            <div className="card--header">
+              <div className="amount">
+                <span className="title">Average Expense Per Entry</span>
+                <span className="amount--value">
+                  {entries.length > 0 ? `$${avgExpense}` : 'N/A'}
+                </span>
+              </div>
+              <i className="fa-solid fa-face-surprise icon dark--green icon--large"></i>
             </div>
           </div>
         </div>
@@ -112,15 +177,43 @@ Give me 2-3 personalized tips on budgeting, saving, or avoiding overspending bas
           <option value="Pending">Pending</option>
           <option value="Completed">Completed</option>
         </select>
-        <button type="submit">Add Expense</button>
-        <button type="button" onClick={handleGetAdvice} disabled={loadingAdvice}>
-          {loadingAdvice ? 'Thinking...' : 'Get Spending Advice 💬'}
-        </button>
+        <button type="submit">Add Entry</button>
       </form>
 
-      {/* Finance Table */}
+      {/* Get Spending Advice Button */}
+      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+        <button
+          style={{
+            backgroundColor: 'rgba(113, 99, 186, 1)',
+            color: 'white',
+            padding: '10px 20px',
+            borderRadius: '8px',
+            fontSize: '16px',
+            cursor: 'pointer',
+            border: 'none'
+          }}
+          onClick={getSpendingAdvice}
+        >
+          Get Spending Advice
+        </button>
+      </div>
+
+      {/* Advice Display */}
+      {advice && (
+        <div style={{
+          background: '#f9f9f9',
+          padding: '1rem',
+          borderRadius: '10px',
+          marginBottom: '2rem',
+          textAlign: 'center'
+        }}>
+          {advice}
+        </div>
+      )}
+
+      {/* Table */}
       <div className="tabular--wrapper">
-        <h3 className="main--title">Finance Data</h3>
+        <h3 className="main--title">Finance data</h3>
         <div className="table--container">
           <table>
             <thead>
@@ -128,28 +221,21 @@ Give me 2-3 personalized tips on budgeting, saving, or avoiding overspending bas
                 <th>Date</th>
                 <th>Transaction Type</th>
                 <th>Description</th>
-                <th>Amount (£)</th>
-                <th>Category</th>
+                <th>Amount</th>
                 <th>Status</th>
               </tr>
             </thead>
             <tbody>
-              {expenses.map((expense, index) => (
+              {entries.map((entry, index) => (
                 <tr key={index}>
-                  <td>{expense.date}</td>
-                  <td>{expense.type}</td>
-                  <td>{expense.description}</td>
-                  <td>£{expense.amount.toFixed(2)}</td>
-                  <td>{expense.category}</td>
-                  <td>{expense.status}</td>
+                  <td>{entry.date}</td>
+                  <td>{entry.type}</td>
+                  <td>{entry.description}</td>
+                  <td>${entry.amount.toFixed(2)}</td>
+                  <td>{entry.status}</td>
                 </tr>
               ))}
             </tbody>
-            <tfoot>
-              <tr>
-                <td colSpan="6">Total: £{totalAmount.toFixed(2)}</td>
-              </tr>
-            </tfoot>
           </table>
         </div>
       </div>
