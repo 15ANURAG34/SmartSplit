@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import '../styles/dashboard.css';
 
+const TOGETHER_API_KEY = process.env.REACT_APP_TOGETHER_API_KEY;
+
 function Dashboard() {
   const [expenses, setExpenses] = useState([]);
   const [loadingAdvice, setLoadingAdvice] = useState(false);
   const [gptAdvice, setGptAdvice] = useState('');
-  const adviceRef = useRef(null); // 💬 Ref to the advice div
+  const adviceRef = useRef(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -19,7 +21,7 @@ function Dashboard() {
       status: e.target.status.value,
     };
 
-    setExpenses([...expenses, newExpense]);
+    setExpenses((prev) => [...prev, newExpense]);
     e.target.reset();
   };
 
@@ -34,23 +36,46 @@ function Dashboard() {
     try {
       setLoadingAdvice(true);
 
-      const response = await fetch('http://localhost:3001/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ expenses }),
+      const expenseList = expenses.map((e) =>
+        `- ${e.date}: ${e.description} (${e.category}) - £${e.amount}`
+      ).join("\n");
+
+      const prompt = `
+You are a helpful financial coach. Here's a list of my recent expenses:
+
+${expenseList}
+
+Give me 2-3 personalized tips on budgeting, saving, or avoiding overspending based on this data. Make it casual and encouraging. Include one emoji.
+`;
+
+      const res = await fetch("https://api.together.xyz/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${TOGETHER_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "mistralai/Mixtral-8x7B-Instruct-v0.1",
+          messages: [
+            { role: "system", content: "You are a helpful personal finance advisor for college students." },
+            { role: "user", content: prompt }
+          ],
+          max_tokens: 300,
+          temperature: 0.8,
+        }),
       });
 
-      const data = await response.json();
-      setGptAdvice(data.message);
+      const data = await res.json();
+      const reply = data.choices?.[0]?.message?.content || "⚠️ No advice received.";
+      setGptAdvice(reply.trim());
     } catch (error) {
-      console.error(error);
-      setGptAdvice('⚠️ Failed to get advice from ChatGPT.');
+      console.error("Advice fetch error:", error);
+      setGptAdvice("⚠️ Failed to get advice from Together.ai.");
     } finally {
       setLoadingAdvice(false);
     }
   };
 
-  // 💬 Scroll to advice automatically
   useEffect(() => {
     if (gptAdvice && adviceRef.current) {
       adviceRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -61,7 +86,6 @@ function Dashboard() {
     <div className="dashboard-content">
       <h1>Welcome to SmartSplit Dashboard</h1>
 
-      {/* Cards Section */}
       <div className="card--container">
         <h3 className="main--title">Today's Data</h3>
         <div className="card--wrapper">
@@ -79,12 +103,12 @@ function Dashboard() {
 
       {/* Expense Input Form */}
       <form className="finance--form" onSubmit={handleSubmit}>
-        <input type="date" id="date" name="date" required />
-        <input type="text" id="type" name="type" placeholder="Transaction Type" required />
-        <input type="text" id="description" name="description" placeholder="Description" required />
-        <input type="number" id="amount" name="amount" placeholder="Amount" required />
-        <input type="text" id="category" name="category" placeholder="Category" required />
-        <select id="status" name="status" required>
+        <input type="date" name="date" required />
+        <input type="text" name="type" placeholder="Transaction Type" required />
+        <input type="text" name="description" placeholder="Description" required />
+        <input type="number" name="amount" placeholder="Amount" required />
+        <input type="text" name="category" placeholder="Category" required />
+        <select name="status" required>
           <option value="Pending">Pending</option>
           <option value="Completed">Completed</option>
         </select>
@@ -130,7 +154,7 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* 💬 Display GPT Advice */}
+      {/* GPT Advice */}
       {gptAdvice && (
         <div
           ref={adviceRef}
