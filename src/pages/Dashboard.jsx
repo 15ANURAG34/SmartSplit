@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import '../styles/dashboard.css';
 
+const TOGETHER_API_KEY = process.env.REACT_APP_TOGETHER_API_KEY;
+
 function Dashboard() {
-  const [entries, setEntries] = useState([]);
-  const [totalBudget, setTotalBudget] = useState(0);
-  const [showBudgetPopup, setShowBudgetPopup] = useState(true);
-  const [initialBudgetInput, setInitialBudgetInput] = useState('');
-  const [advice, setAdvice] = useState('');
+  const [expenses, setExpenses] = useState([]);
+  const [loadingAdvice, setLoadingAdvice] = useState(false);
+  const [gptAdvice, setGptAdvice] = useState('');
+  const adviceRef = useRef(null);
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
@@ -19,8 +20,8 @@ function Dashboard() {
       status: form.status.value,
     };
 
-    setEntries([...entries, newEntry]);
-    form.reset();
+    setExpenses((prev) => [...prev, newExpense]);
+    e.target.reset();
   };
 
   const totalExpenses = entries.reduce((sum, entry) => sum + (entry.type.toLowerCase() === 'expenses' ? entry.amount : 0), 0);
@@ -54,19 +55,53 @@ function Dashboard() {
     const prompt = `I spent $${totalSpent} this week. Can you give me 3 fun, easy tips to save money next week?`;
 
     try {
-      const response = await fetch('http://localhost:5000/spending-advice', { // your server API
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
+      setLoadingAdvice(true);
+
+      const expenseList = expenses.map((e) =>
+        `- ${e.date}: ${e.description} (${e.category}) - £${e.amount}`
+      ).join("\n");
+
+      const prompt = `
+You are a helpful financial coach. Here's a list of my recent expenses:
+
+${expenseList}
+
+Give me 2-3 personalized tips on budgeting, saving, or avoiding overspending based on this data. Make it casual and encouraging. Include one emoji.
+`;
+
+      const res = await fetch("https://api.together.xyz/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${TOGETHER_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: "mistralai/Mixtral-8x7B-Instruct-v0.1",
+          messages: [
+            { role: "system", content: "You are a helpful personal finance advisor for college students." },
+            { role: "user", content: prompt }
+          ],
+          max_tokens: 300,
+          temperature: 0.8,
+        }),
       });
 
-      const data = await response.json();
-      setAdvice(data.advice);
-    } catch (err) {
-      console.error('Error fetching advice:', err);
-      setAdvice('Error getting advice. Please try again.');
+      const data = await res.json();
+      const reply = data.choices?.[0]?.message?.content || "⚠️ No advice received.";
+      setGptAdvice(reply.trim());
+    } catch (error) {
+      console.error("Advice fetch error:", error);
+      setGptAdvice("⚠️ Failed to get advice from Together.ai.");
+    } finally {
+      setLoadingAdvice(false);
     }
   };
+
+  useEffect(() => {
+    if (gptAdvice && adviceRef.current) {
+      adviceRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [gptAdvice]);
 
   return (
     <div className="main--content">
@@ -88,15 +123,6 @@ function Dashboard() {
         </div>
       )}
 
-      {/* Header */}
-      <div className="header--wrapper">
-        <div className="header--title">
-          <span>SmartSplit</span>
-          <h2>Dashboard</h2>
-        </div>
-      </div>
-
-      {/* Cards */}
       <div className="card--container">
         <div className="title--row">
           <h3 className="main--title">Today's data</h3>
@@ -140,14 +166,13 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Finance Form */}
-      <form id="finance-form" className="finance--form" onSubmit={handleFormSubmit}>
+      {/* Expense Input Form */}
+      <form className="finance--form" onSubmit={handleSubmit}>
         <input type="date" name="date" required />
-        <select name="type" required>
-          <option value="expenses">Expenses</option>
-        </select>
+        <input type="text" name="type" placeholder="Transaction Type" required />
         <input type="text" name="description" placeholder="Description" required />
         <input type="number" name="amount" placeholder="Amount" required />
+        <input type="text" name="category" placeholder="Category" required />
         <select name="status" required>
           <option value="Pending">Pending</option>
           <option value="Completed">Completed</option>
@@ -214,6 +239,28 @@ function Dashboard() {
           </table>
         </div>
       </div>
+
+      {/* GPT Advice */}
+      {gptAdvice && (
+        <div
+          ref={adviceRef}
+          style={{
+            backgroundColor: '#f1f4ff',
+            marginTop: '2rem',
+            padding: '2rem',
+            borderRadius: '15px',
+            border: '2px solid #b5c9ff',
+            boxShadow: '0 0 15px rgba(113, 99, 186, 0.4)',
+            fontSize: '1.2rem',
+            color: '#333',
+            animation: 'fadeIn 0.8s ease-in-out',
+            transition: 'all 0.3s ease-in-out',
+          }}
+        >
+          <h2 style={{ marginBottom: '10px', color: '#715FDB' }}>💬 SmartSplit AI Advice</h2>
+          <p>{gptAdvice}</p>
+        </div>
+      )}
     </div>
   );
 }

@@ -18,7 +18,6 @@ function GoalForm({ onAddGoal }) {
         day: '2-digit'
       }).replaceAll('/', '-');
 
-      console.log("🔑 TOGETHER_API_KEY:", TOGETHER_API_KEY);
       const response = await fetch('https://api.together.xyz/v1/chat/completions', {
         method: 'POST',
         headers: {
