@@ -41,11 +41,11 @@
 .menu a {
   display: flex;
   align-items: center;
-  gap: 15px;
+  /*gap: 15px;*/
   text-decoration: none;
   color: white;
   font-size: 16px;
-  padding: 10px;
+  padding: 5px;
 }
   
 .menu a.active {

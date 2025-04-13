@@ -1,9 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import '../styles/dashboard.css';
 
 const TOGETHER_API_KEY = process.env.REACT_APP_TOGETHER_API_KEY;
 
+
 function Dashboard() {
+  const [entries, setEntries] = useState([]);
+  const [totalBudget, setTotalBudget] = useState(0);
+  const [initialBudgetInput, setInitialBudgetInput] = useState('');
+  const [showBudgetPopup, setShowBudgetPopup] = useState(true);
+  const [advice, setAdvice] = useState('');
   const [expenses, setExpenses] = useState([]);
   const [loadingAdvice, setLoadingAdvice] = useState(false);
   const [gptAdvice, setGptAdvice] = useState('');
@@ -20,7 +26,7 @@ function Dashboard() {
       status: form.status.value,
     };
 
-    setExpenses((prev) => [...prev, newExpense]);
+    setEntries((prev) => [...prev, newEntry]);
     e.target.reset();
   };
 
@@ -167,8 +173,8 @@ Give me 2-3 personalized tips on budgeting, saving, or avoiding overspending bas
       </div>
 
       {/* Expense Input Form */}
-      <form className="finance--form" onSubmit={handleSubmit}>
-        <input type="date" name="date" required />
+      <form className="finance--form" onSubmit={handleFormSubmit}>
+      <input type="date" name="date" required />
         <input type="text" name="type" placeholder="Transaction Type" required />
         <input type="text" name="description" placeholder="Description" required />
         <input type="number" name="amount" placeholder="Amount" required />
