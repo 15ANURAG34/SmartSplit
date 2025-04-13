@@ -16,7 +16,7 @@ function Sidebar() {
         <li>
           <Link to="/accountability">
             <i className="fas fa-user-friends"></i> 
-            <span>Accountability Circle</span>
+            <span>Friend Circle</span>
           </Link>
         </li>
 
